@@ -3,6 +3,7 @@ package com.sweetebin.spaceshooter;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 
 abstract class Ship {
 
@@ -10,7 +11,8 @@ abstract class Ship {
     float movementSpeed; //world units per second
     int shield;
     int ID;
-
+    boolean isAlive;
+    int health;
     //laser information
     float laserWidth, laserHeight;
     float shotDelta = 0;
@@ -18,13 +20,9 @@ abstract class Ship {
     float laserMovementSpeed;
 
     //pos & dimensions
-    float shieldHeight;
-    float shieldWidth;
-    float shieldxPos;
-    float shieldyPos;
-    float xPosCentre, yPosCentre, xPos, yPos;
-    float width, height;
-    Rectangle thisRect;
+    Rectangle shipRect;
+    Vector2 centrePos = new Vector2();
+    Rectangle shieldRect = new Rectangle();
     //graphics
     TextureRegion shipTexture, shieldTexture, laserTexture;
 
@@ -32,55 +30,79 @@ abstract class Ship {
                 float movementSpeed, int shield,
                 float width, float height,
                 float laserWidth, float laserHeight, float laserMovementSpeed, float timeBeetwenShots,
-                TextureRegion shipTexture, TextureRegion shieldTexture, TextureRegion laserTexture, int ID) {
+                TextureRegion shipTexture, TextureRegion shieldTexture, TextureRegion laserTexture, int ID, int health) {
         this.movementSpeed = movementSpeed;
         this.shield = shield;
-        this.xPos = xPos;
-        this.yPos = yPos;
-        this.xPosCentre = xPos - width/2;
-        this.yPosCentre = yPos - height/2;
-        this.width = width;
-        this.height = height;
+        this.ID = ID;
+        this.shipRect = new Rectangle(xPos, yPos, width, height);
+        this.health = health;
+        this.centrePos = shipRect.getCenter(centrePos);
         this.shipTexture = shipTexture;
         this.shieldTexture = shieldTexture;
-        this.shieldWidth = width*1.2f;
-        this.shieldHeight = height*1.4f;
-        this.shieldxPos = xPos - shieldWidth/2;
-        this.shieldyPos = yPos - shieldHeight/2;
+        bindShield(width, height);
         this.laserTexture = laserTexture;
         this.laserWidth = laserWidth;
         this.laserHeight = laserHeight;
         this.laserMovementSpeed = laserMovementSpeed;
         this.timeBeetwenShots = timeBeetwenShots;
-        this.ID = ID;
-        thisRect = new Rectangle(xPosCentre, yPosCentre, width, height);
+        isAlive = true;
     }
 
     public void update(float delta){
         shotDelta += delta;
-        thisRect.set(xPosCentre, yPosCentre, width, height);
+        bindShield(shipRect.getWidth(), shipRect.getHeight());
+    }
+
+    private void bindShield(float width, float height) {
+        this.shieldRect.setX(centrePos.x - width / 2);
+        this.shieldRect.setWidth(width);
+        this.shieldRect.setHeight(height*1.4f);
+        if (this.ID == 1) {
+            this.shieldRect.setY(shipRect.getY() - height/2);
+        }else {
+        this.shieldRect.setY(shipRect.getY());
+        }
     }
 
     public boolean canFire(){
+        if(isAlive){
         return (shotDelta - timeBeetwenShots >= 0);
+        }else return false;
     }
 
     public boolean doesIntersects(Rectangle rect){
-        return thisRect.overlaps(rect);
+        if(shieldRect.overlaps(rect) && shield>0){
+            return true;
+        }else {
+            return shipRect.overlaps(rect);
+        }
     }
 
-    public void hit(Laser laser){
+    public boolean hit(Laser laser){
         if(shield>0){
-            shield--;
+            shield -= laser.getDamage();
+            System.out.println(shield+ "  "+ ID);
+        }else {
+            health-=laser.getDamage();
+            System.out.println(health+ "  "+ ID);
         }
+        if(health <= 0){
+            isAlive = false;
+            return false;
+        }
+        return true;
     }
 
     public abstract Laser[] fireLaser();
 
     public void draw(Batch batch){
-        batch.draw(shipTexture, xPosCentre, yPosCentre, width, height);
+        if(isAlive){
+        batch.draw(shipTexture, shipRect.getX(), shipRect.getY(), shipRect.getWidth(), shipRect.getHeight());
         if(shield > 0){
-            batch.draw(shieldTexture, shieldxPos, shieldyPos, shieldWidth, shieldHeight);
+            batch.draw(shieldTexture,shieldRect.getX(), shieldRect.getY(), shieldRect.getWidth(), shieldRect.getHeight());
+        }
         }
     }
+
+    public abstract void moveLeft(float delta);
 }

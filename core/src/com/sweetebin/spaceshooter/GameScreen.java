@@ -1,5 +1,8 @@
 package com.sweetebin.spaceshooter;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -10,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -43,13 +47,14 @@ public class GameScreen implements Screen {
     private Ship playerShip;
     private Ship enemyShip;
     private LinkedList<Laser> lasersLinkedList;
-
+    private ArrayList<Ship> ships;
     GameScreen(){
         initTextures();
-
-        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 5, 10, 10, 10, 2f, 10, 60, 1, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0);
-        enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 5, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1);
-
+        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 5, 10, 10, 10, 2f, 10, 60, 1, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
+        enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 5, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1, 5);
+        ships = new ArrayList<>();
+        ships.add(playerShip);
+        ships.add(enemyShip);
         lasersLinkedList = new LinkedList<>();
 
 
@@ -72,6 +77,7 @@ public class GameScreen implements Screen {
         enemyShieldTextureRegion = textureAtlas.findRegion("shield2");
         laserBlueRegion = textureAtlas.findRegion("laserBlue01");
         laserRedRegion = textureAtlas.findRegion("laserRed01");
+        laserRedRegion.flip(false, true);
         enemyShieldTextureRegion.flip(false, true);
 
         backgrounds = new TextureRegion[4];
@@ -84,17 +90,12 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         batch.begin();
-        playerShip.update(delta);
-        enemyShip.update(delta);
-        //scrolling background
+        if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
+            ships.get(ships.indexOf(playerShip)).moveLeft(delta);
+        }
         renderBackground(delta);
-
-        enemyShip.draw(batch);
-
-        playerShip.draw(batch);
-
+        shipsIterating(delta);
         renderLasers(delta);
-
         detectCollisions();
 
         batch.end();
@@ -104,25 +105,33 @@ public class GameScreen implements Screen {
         ListIterator<Laser> iter = lasersLinkedList.listIterator();
         while (iter.hasNext()){
             Laser laser = iter.next();
-            if(laser.ID == 0 && enemyShip.doesIntersects(laser.getHitbox())){
-                enemyShip.hit(laser);
-                iter.remove();
+            for (Ship ship:ships) {
+                if(ship.ID != laser.ID && ship.doesIntersects(laser.getHitbox())){
+                    ship.hit(laser);
+                    iter.remove();
+                    break;
+                }
             }
-            if(laser.ID == 1 && playerShip.doesIntersects(laser.getHitbox())){
-                playerShip.hit(laser);
-                iter.remove();
+        }
+    }
+
+    private void shipsIterating(float delta) {
+        ListIterator<Ship> shipIter = ships.listIterator();
+        while (shipIter.hasNext()){
+            Ship ship = shipIter.next();
+            ship.update(delta);
+            ship.draw(batch);
+            if(!ship.isAlive){
+                shipIter.remove();
             }
         }
     }
 
     private void renderLasers(float delta) {
-        if(playerShip.canFire()){
-            Laser[] lasers = playerShip.fireLaser();
-            lasersLinkedList.addAll(Arrays.asList(lasers));
-        }
-        if(enemyShip.canFire()){
-            Laser[] lasers = enemyShip.fireLaser();
-            lasersLinkedList.addAll(Arrays.asList(lasers));
+        for (Ship ship: ships) {
+            if(ship.canFire()){
+                lasersLinkedList.addAll(Arrays.asList(ship.fireLaser()));
+            }
         }
 
         ListIterator<Laser> iter = lasersLinkedList.listIterator();

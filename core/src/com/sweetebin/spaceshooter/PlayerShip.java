@@ -27,4 +27,9 @@ public class PlayerShip extends Ship {
     public void moveLeft(float delta) {
         shipRect.setX(shipRect.getX()-delta*movementSpeed);
     }
+
+    @Override
+    public void moveRight(float delta) {
+        shipRect.setX(shipRect.getX()+delta*movementSpeed);
+    }
 }

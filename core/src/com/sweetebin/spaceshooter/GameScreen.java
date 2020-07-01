@@ -2,11 +2,9 @@ package com.sweetebin.spaceshooter;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -18,8 +16,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-import javax.swing.Spring;
-import javax.xml.soap.Text;
 
 public class GameScreen implements Screen {
 
@@ -48,10 +44,11 @@ public class GameScreen implements Screen {
     private Ship enemyShip;
     private LinkedList<Laser> lasersLinkedList;
     private ArrayList<Ship> ships;
+
     GameScreen(){
         initTextures();
-        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 5, 10, 10, 10, 2f, 10, 60, 1, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
-        enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 5, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1, 5);
+        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 60, 10, 10, 10, 2f, 10, 60, 1, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
+        enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 20, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1, 5);
         ships = new ArrayList<>();
         ships.add(playerShip);
         ships.add(enemyShip);
@@ -90,8 +87,12 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         batch.begin();
+
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
             ships.get(ships.indexOf(playerShip)).moveLeft(delta);
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
+            ships.get(ships.indexOf(playerShip)).moveRight(delta);
         }
         renderBackground(delta);
         shipsIterating(delta);

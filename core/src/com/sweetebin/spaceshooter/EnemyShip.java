@@ -27,4 +27,9 @@ public class EnemyShip extends Ship {
 
     }
 
+    @Override
+    public void moveRight(float delta) {
+
+    }
+
 }

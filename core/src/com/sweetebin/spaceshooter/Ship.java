@@ -1,5 +1,7 @@
 package com.sweetebin.spaceshooter;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
@@ -24,6 +26,7 @@ abstract class Ship {
     Vector2 centrePos = new Vector2();
     Rectangle shieldRect = new Rectangle();
     //graphics
+
     TextureRegion shipTexture, shieldTexture, laserTexture;
 
     public Ship(float xPos, float yPos,
@@ -50,6 +53,7 @@ abstract class Ship {
 
     public void update(float delta){
         shotDelta += delta;
+        centrePos = shipRect.getCenter(centrePos);
         bindShield(shipRect.getWidth(), shipRect.getHeight());
     }
 
@@ -105,4 +109,8 @@ abstract class Ship {
     }
 
     public abstract void moveLeft(float delta);
+    public abstract void moveRight(float delta);
+    public void healthBar(){
+
+    }
 }

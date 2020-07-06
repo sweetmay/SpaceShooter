@@ -2,6 +2,7 @@ package com.sweetebin.spaceshooter;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -18,6 +19,8 @@ import java.util.ListIterator;
 
 
 public class GameScreen implements Screen {
+    //input
+    private SSInputProcessor inputProcessor;
 
     //screen
     private Camera camera;
@@ -36,8 +39,8 @@ public class GameScreen implements Screen {
 
 
     //parameters
-    private final int WORLD_WIDTH = 72;
-    private final int WORLD_HEIGHT = 128;
+    private static final int WORLD_WIDTH = 72;
+    private static final int WORLD_HEIGHT = 128;
 
     //game objs
     private Ship playerShip;
@@ -63,7 +66,18 @@ public class GameScreen implements Screen {
 
         backgroundMaxScrollSpeed = (float) WORLD_HEIGHT / 4;
         batch = new SpriteBatch();
+        inputProcessor = new SSInputProcessor(playerShip, viewport);
+        Gdx.input.setInputProcessor(inputProcessor);
 
+
+    }
+
+    public static int getWorldWidth() {
+        return WORLD_WIDTH;
+    }
+
+    public static int getWorldHeight() {
+        return WORLD_HEIGHT;
     }
 
     private void initTextures() {
@@ -88,18 +102,21 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         batch.begin();
 
+        keysInput(delta);
+        renderBackground(delta);
+        shipsIterating(delta);
+        renderLasers(delta);
+        detectCollisions();
+        batch.end();
+    }
+
+    private void keysInput(float delta) {
         if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
             ships.get(ships.indexOf(playerShip)).moveLeft(delta);
         }
         if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
             ships.get(ships.indexOf(playerShip)).moveRight(delta);
         }
-        renderBackground(delta);
-        shipsIterating(delta);
-        renderLasers(delta);
-        detectCollisions();
-
-        batch.end();
     }
 
     private void detectCollisions() {

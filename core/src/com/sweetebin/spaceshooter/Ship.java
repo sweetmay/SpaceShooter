@@ -1,5 +1,6 @@
 package com.sweetebin.spaceshooter;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -22,6 +23,8 @@ abstract class Ship {
     float laserMovementSpeed;
 
     //pos & dimensions
+    Vector2 tempVector;
+    Vector2 destVector;
     Rectangle shipRect;
     Vector2 centrePos = new Vector2();
     Rectangle shieldRect = new Rectangle();
@@ -52,6 +55,7 @@ abstract class Ship {
     }
 
     public void update(float delta){
+        moveToPos();
         shotDelta += delta;
         centrePos = shipRect.getCenter(centrePos);
         bindShield(shipRect.getWidth(), shipRect.getHeight());
@@ -106,6 +110,25 @@ abstract class Ship {
             batch.draw(shieldTexture,shieldRect.getX(), shieldRect.getY(), shieldRect.getWidth(), shieldRect.getHeight());
         }
         }
+    }
+
+    public void moveToPos(){
+        if(destVector!=null){
+            System.out.println(destVector);
+            Vector2 pos = new Vector2();
+            Vector2 mag;
+            pos = shipRect.getCenter(pos);
+            mag = destVector.sub(pos);
+            destVector = tempVector;
+            pos.mulAdd(mag.nor(), movementSpeed * Gdx.graphics.getDeltaTime());
+            shipRect.setCenter(pos);
+        }
+    }
+
+    public void setDestVect(Vector2 vect){
+        tempVector = vect;
+        destVector = vect;
+        System.out.println(vect);
     }
 
     public abstract void moveLeft(float delta);

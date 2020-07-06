@@ -1,5 +1,6 @@
 package com.sweetebin.spaceshooter;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class PlayerShip extends Ship {
@@ -30,6 +31,6 @@ public class PlayerShip extends Ship {
 
     @Override
     public void moveRight(float delta) {
-        shipRect.setX(shipRect.getX()+delta*movementSpeed);
+        shipRect.setX(shipRect.getX()+ Gdx.graphics.getDeltaTime()*movementSpeed);
     }
 }

@@ -2,6 +2,7 @@ package com.sweetebin.spaceshooter;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 
 public class PlayerShip extends Ship {
 
@@ -14,6 +15,25 @@ public class PlayerShip extends Ship {
     }
 
     @Override
+    public boolean hit(Laser laser) {
+        {
+            if(shield>0){
+                shield -= laser.getDamage();
+                System.out.println(shield+ "  "+ ID);
+            }else {
+                health-=laser.getDamage();
+                Gdx.input.vibrate(50);
+                System.out.println(health+ "  "+ ID);
+            }
+            if(health <= 0){
+                isAlive = false;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    @Override
     public Laser[] fireLaser() {
         Laser[] lasers = new Laser[2];
         lasers[0] = new Laser(shipRect.getX(), centrePos.y, laserWidth, laserHeight, laserMovementSpeed, laserTexture, ID, 1);
@@ -22,6 +42,26 @@ public class PlayerShip extends Ship {
         shotDelta = 0;
 
         return lasers;
+    }
+
+    @Override
+    public void moveToPos(){
+        if(touchVector != null && touchVector.dst(centrePos)>1){
+            Vector2 mag;
+            destVector.set(touchVector);
+            mag = destVector.sub(centrePos);
+            System.out.println(touchVector);
+            shipRect.setCenter(centrePos.mulAdd(mag.nor(),
+                    movementSpeed * Gdx.graphics.getDeltaTime()));
+        }
+    }
+    @Override
+    public void setDestVect(Vector2 vect){
+        if(touchVector != null){
+            touchVector.set(vect);
+        }else {
+            touchVector = vect;
+        }
     }
 
     @Override

@@ -44,7 +44,6 @@ public class SSInputProcessor implements InputProcessor {
         V2 = new Vector2(screenX, screenY);
         V2 = viewport.unproject(V2);
         ship.setDestVect(V2);
-        System.out.println(V2);
         return false;
     }
 

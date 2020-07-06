@@ -23,8 +23,8 @@ abstract class Ship {
     float laserMovementSpeed;
 
     //pos & dimensions
-    Vector2 tempVector;
-    Vector2 destVector;
+    Vector2 touchVector;
+    Vector2 destVector = new Vector2();
     Rectangle shipRect;
     Vector2 centrePos = new Vector2();
     Rectangle shieldRect = new Rectangle();
@@ -86,20 +86,7 @@ abstract class Ship {
         }
     }
 
-    public boolean hit(Laser laser){
-        if(shield>0){
-            shield -= laser.getDamage();
-            System.out.println(shield+ "  "+ ID);
-        }else {
-            health-=laser.getDamage();
-            System.out.println(health+ "  "+ ID);
-        }
-        if(health <= 0){
-            isAlive = false;
-            return false;
-        }
-        return true;
-    }
+    public abstract boolean hit(Laser laser);
 
     public abstract Laser[] fireLaser();
 
@@ -112,24 +99,9 @@ abstract class Ship {
         }
     }
 
-    public void moveToPos(){
-        if(destVector!=null){
-            System.out.println(destVector);
-            Vector2 pos = new Vector2();
-            Vector2 mag;
-            pos = shipRect.getCenter(pos);
-            mag = destVector.sub(pos);
-            destVector = tempVector;
-            pos.mulAdd(mag.nor(), movementSpeed * Gdx.graphics.getDeltaTime());
-            shipRect.setCenter(pos);
-        }
-    }
+    public abstract void moveToPos();
 
-    public void setDestVect(Vector2 vect){
-        tempVector = vect;
-        destVector = vect;
-        System.out.println(vect);
-    }
+    public abstract void setDestVect(Vector2 vect);
 
     public abstract void moveLeft(float delta);
     public abstract void moveRight(float delta);

@@ -9,6 +9,15 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -27,6 +36,7 @@ public class GameScreen implements Screen {
     private Viewport viewport;
 
     //graphics
+
     private SpriteBatch batch;
     private TextureRegion[] backgrounds;
     private TextureAtlas textureAtlas;
@@ -39,6 +49,7 @@ public class GameScreen implements Screen {
 
 
     //parameters
+    private static final int MAX_ENEMIES = 5;
     private static final int WORLD_WIDTH = 72;
     private static final int WORLD_HEIGHT = 128;
 
@@ -47,12 +58,18 @@ public class GameScreen implements Screen {
     private Ship enemyShip;
     private LinkedList<Laser> lasersLinkedList;
     private ArrayList<Ship> ships;
-
     GameScreen(){
         initTextures();
-        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 60, 10, 10, 10, 2f, 10, 60, 1, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
+        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 80, 10, 10, 10, 2f, 10, 120, 0.5f, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
         enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 20, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1, 5);
         ships = new ArrayList<>();
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            ships.add(new EnemyShip(WORLD_WIDTH/(i+1), WORLD_HEIGHT*3/4,
+                    20, 10, 10, 10,
+                    4f, 5, 40,
+                    2f, enemyShipTextureRegion, enemyShieldTextureRegion,
+                    laserRedRegion, 1, 5));
+        }
         ships.add(playerShip);
         ships.add(enemyShip);
         lasersLinkedList = new LinkedList<>();
@@ -69,9 +86,7 @@ public class GameScreen implements Screen {
         inputProcessor = new SSInputProcessor(playerShip, viewport);
         Gdx.input.setInputProcessor(inputProcessor);
 
-
     }
-
     public static int getWorldWidth() {
         return WORLD_WIDTH;
     }
@@ -101,7 +116,6 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         batch.begin();
-
         keysInput(delta);
         renderBackground(delta);
         shipsIterating(delta);

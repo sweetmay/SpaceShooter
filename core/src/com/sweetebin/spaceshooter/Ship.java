@@ -29,14 +29,17 @@ abstract class Ship {
     Vector2 centrePos = new Vector2();
     Rectangle shieldRect = new Rectangle();
     //graphics
-
     TextureRegion shipTexture, shieldTexture, laserTexture;
+    //Timings
+    boolean isShieldDamaged;
+    float shieldDamageRenderTime;
 
     public Ship(float xPos, float yPos,
                 float movementSpeed, int shield,
                 float width, float height,
                 float laserWidth, float laserHeight, float laserMovementSpeed, float timeBeetwenShots,
-                TextureRegion shipTexture, TextureRegion shieldTexture, TextureRegion laserTexture, int ID, int health) {
+                TextureRegion shipTexture, TextureRegion shieldTexture,
+                TextureRegion laserTexture, int ID, int health) {
         this.movementSpeed = movementSpeed;
         this.shield = shield;
         this.ID = ID;
@@ -52,21 +55,22 @@ abstract class Ship {
         this.laserMovementSpeed = laserMovementSpeed;
         this.timeBeetwenShots = timeBeetwenShots;
         isAlive = true;
+        isShieldDamaged = false;
+        shieldDamageRenderTime = 0.020f;
     }
 
     public void update(float delta){
         moveToPos();
         shotDelta += delta;
-        centrePos = shipRect.getCenter(centrePos);
         bindShield(shipRect.getWidth(), shipRect.getHeight());
     }
 
     private void bindShield(float width, float height) {
         this.shieldRect.setX(centrePos.x - width / 2);
         this.shieldRect.setWidth(width);
-        this.shieldRect.setHeight(height*1.4f);
+        this.shieldRect.setHeight(height*1.2f);
         if (this.ID == 1) {
-            this.shieldRect.setY(shipRect.getY() - height/2);
+            this.shieldRect.setY(shipRect.getY()-height/3);
         }else {
         this.shieldRect.setY(shipRect.getY());
         }
@@ -92,19 +96,26 @@ abstract class Ship {
 
     public void draw(Batch batch){
         if(isAlive){
-        batch.draw(shipTexture, shipRect.getX(), shipRect.getY(), shipRect.getWidth(), shipRect.getHeight());
-        if(shield > 0){
-            batch.draw(shieldTexture,shieldRect.getX(), shieldRect.getY(), shieldRect.getWidth(), shieldRect.getHeight());
-        }
+            batch.draw(shipTexture, shipRect.getX(), shipRect.getY(), shipRect.getWidth(), shipRect.getHeight());
+            if(shield > 0){
+                if(isShieldDamaged && shieldDamageRenderTime>0){
+                    shieldDamageRenderTime-=Gdx.graphics.getDeltaTime();
+                    batch.draw(shieldTexture, (float) (shieldRect.getX()+(-1f + Math.random()*2.2f)), shieldRect.getY(), shieldRect.getWidth(), shieldRect.getHeight());
+                }else {
+                    shieldDamageRenderTime = 0.020f;
+                    isShieldDamaged = false;
+                    batch.draw(shieldTexture,shieldRect.getX(), shieldRect.getY(), shieldRect.getWidth(), shieldRect.getHeight());
+                }
+            }
         }
     }
+
+
 
     public abstract void moveToPos();
 
     public abstract void setDestVect(Vector2 vect);
 
-    public abstract void moveLeft(float delta);
-    public abstract void moveRight(float delta);
     public void healthBar(){
 
     }

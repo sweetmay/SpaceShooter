@@ -1,12 +1,13 @@
 package com.sweetebin.spaceshooter;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 
 public class EnemyShip extends Ship {
     float moveDelta = 0;
-    float timeBetweenMove = 5f;
+    float timeBetweenMove = (float) (2 + Math.random() * 6);
     public EnemyShip(float xPos, float yPos,
                      float movementSpeed, int shield,
                      float width, float height,
@@ -22,6 +23,7 @@ public class EnemyShip extends Ship {
         {
             if(shield>0){
                 shield -= laser.getDamage();
+                isShieldDamaged = true;
             }else {
                 health-=laser.getDamage();
             }
@@ -42,6 +44,7 @@ public class EnemyShip extends Ship {
 
         return lasers;
     }
+
 
     @Override
     public void moveToPos() {
@@ -65,14 +68,6 @@ public class EnemyShip extends Ship {
 
     }
 
-    @Override
-    public void moveLeft(float delta) {
 
-    }
-
-    @Override
-    public void moveRight(float delta) {
-
-    }
 
 }

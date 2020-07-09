@@ -43,6 +43,7 @@ public class SSInputProcessor implements InputProcessor {
     public boolean touchDragged(int screenX, int screenY, int pointer) {
         V2 = new Vector2(screenX, screenY);
         V2 = viewport.unproject(V2);
+        V2.y += ship.shipRect.height/1.5;
         ship.setDestVect(V2);
         return false;
     }

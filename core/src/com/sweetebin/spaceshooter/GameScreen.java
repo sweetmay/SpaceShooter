@@ -2,7 +2,6 @@ package com.sweetebin.spaceshooter;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -10,18 +9,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
-import com.badlogic.gdx.physics.box2d.BodyDef;
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
-import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.Fixture;
-import com.badlogic.gdx.physics.box2d.FixtureDef;
-import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -41,7 +31,9 @@ public class GameScreen implements Screen {
     private TextureRegion[] backgrounds;
     private TextureAtlas textureAtlas;
     private TextureRegion playerTextureRegion, playerShieldTextureRegion,
-            enemyShipTextureRegion, enemyShieldTextureRegion, laserBlueRegion, laserRedRegion;
+            enemyShipTextureRegion, enemyShieldTextureRegion,
+            playerDamagedShieldRegion, enemyDamagedShieldRegion,
+            laserBlueRegion, laserRedRegion;
 
     //timing
     private float[] backgroundOffsets = {0,0,0,0};
@@ -54,25 +46,17 @@ public class GameScreen implements Screen {
     private static final int WORLD_HEIGHT = 128;
 
     //game objs
+    private LinkedList<Explosion> explosionLinkedList;
     private Ship playerShip;
-    private Ship enemyShip;
     private LinkedList<Laser> lasersLinkedList;
-    private ArrayList<Ship> ships;
+    private LinkedList<Ship> ships;
     GameScreen(){
         initTextures();
-        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 80, 10, 10, 10, 2f, 10, 120, 0.5f, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 10);
-        enemyShip = new EnemyShip(WORLD_WIDTH/2, WORLD_HEIGHT*3/4, 20, 10, 10, 10, 4f, 5, 40, 2f, enemyShipTextureRegion, enemyShieldTextureRegion, laserRedRegion, 1, 5);
-        ships = new ArrayList<>();
-        for (int i = 0; i < MAX_ENEMIES; i++) {
-            ships.add(new EnemyShip(WORLD_WIDTH/(i+1), WORLD_HEIGHT*3/4,
-                    20, 10, 10, 10,
-                    4f, 5, 40,
-                    2f, enemyShipTextureRegion, enemyShieldTextureRegion,
-                    laserRedRegion, 1, 5));
-        }
+        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 60, 10, 10, 10, 1.5f, 10, 150, 0.15f, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 100);
+        ships = new LinkedList<>();
         ships.add(playerShip);
-        ships.add(enemyShip);
         lasersLinkedList = new LinkedList<>();
+        explosionLinkedList = new LinkedList<>();
 
 
         camera = new OrthographicCamera();
@@ -87,6 +71,17 @@ public class GameScreen implements Screen {
         Gdx.input.setInputProcessor(inputProcessor);
 
     }
+
+    private void addEnemies(ListIterator<Ship> iter) {
+        for (int i = 0; i < MAX_ENEMIES; i++) {
+            iter.add(new EnemyShip(WORLD_WIDTH/(i+1), WORLD_HEIGHT + 10,
+                    20, 10, 10, 10,
+                    2f, 5, (float) (40 + Math.random()*45),
+                    (float) (1 + Math.random()), enemyShipTextureRegion, enemyShieldTextureRegion,
+                    laserRedRegion, 1, 5));
+        }
+    }
+
     public static int getWorldWidth() {
         return WORLD_WIDTH;
     }
@@ -97,14 +92,17 @@ public class GameScreen implements Screen {
 
     private void initTextures() {
         textureAtlas = new TextureAtlas("images.atlas");
-        playerTextureRegion = textureAtlas.findRegion("playerShip1_green");
-        playerShieldTextureRegion = textureAtlas.findRegion("shield1");
-        enemyShipTextureRegion = textureAtlas.findRegion("enemyBlack1");
         enemyShieldTextureRegion = textureAtlas.findRegion("shield2");
+        playerTextureRegion = textureAtlas.findRegion("playerShip1_green");
+
+        playerShieldTextureRegion = textureAtlas.findRegion("shield3");
+        enemyShipTextureRegion = textureAtlas.findRegion("enemyBlack1");
+
         laserBlueRegion = textureAtlas.findRegion("laserBlue01");
         laserRedRegion = textureAtlas.findRegion("laserRed01");
         laserRedRegion.flip(false, true);
         enemyShieldTextureRegion.flip(false, true);
+
 
         backgrounds = new TextureRegion[4];
         backgrounds[0] = textureAtlas.findRegion("background0");
@@ -116,22 +114,15 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         batch.begin();
-        keysInput(delta);
+        System.out.println(Gdx.graphics.getFramesPerSecond());
         renderBackground(delta);
         shipsIterating(delta);
         renderLasers(delta);
         detectCollisions();
+        updateAndRenderExplosions();
         batch.end();
     }
 
-    private void keysInput(float delta) {
-        if(Gdx.input.isKeyPressed(Input.Keys.LEFT)){
-            ships.get(ships.indexOf(playerShip)).moveLeft(delta);
-        }
-        if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)){
-            ships.get(ships.indexOf(playerShip)).moveRight(delta);
-        }
-    }
 
     private void detectCollisions() {
         ListIterator<Laser> iter = lasersLinkedList.listIterator();
@@ -147,13 +138,34 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void createExplosion(Ship ship) {
+        explosionLinkedList.add(new Explosion(ship));
+    }
+
+    private void updateAndRenderExplosions(){
+        ListIterator<Explosion> iter = explosionLinkedList.listIterator();
+        while (iter.hasNext()){
+            Explosion explosion = iter.next();
+            explosion.update(batch);
+            if(explosion.isEnded){
+                iter.remove();
+            }
+
+        }
+    }
+
     private void shipsIterating(float delta) {
         ListIterator<Ship> shipIter = ships.listIterator();
+
         while (shipIter.hasNext()){
             Ship ship = shipIter.next();
+            if(ships.size() == 1){
+                addEnemies(shipIter);
+            }
             ship.update(delta);
             ship.draw(batch);
             if(!ship.isAlive){
+                createExplosion(ship);
                 shipIter.remove();
             }
         }

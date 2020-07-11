@@ -4,11 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -26,13 +32,12 @@ public class GameScreen implements Screen {
     private Viewport viewport;
 
     //graphics
-
+    private HealthShieldBar healthShieldBar;
     private SpriteBatch batch;
     private TextureRegion[] backgrounds;
     private TextureAtlas textureAtlas;
     private TextureRegion playerTextureRegion, playerShieldTextureRegion,
             enemyShipTextureRegion, enemyShieldTextureRegion,
-            playerDamagedShieldRegion, enemyDamagedShieldRegion,
             laserBlueRegion, laserRedRegion;
 
     //timing
@@ -42,8 +47,8 @@ public class GameScreen implements Screen {
 
     //parameters
     private static final int MAX_ENEMIES = 5;
-    private static final int WORLD_WIDTH = 72;
-    private static final int WORLD_HEIGHT = 128;
+    private static final int WORLD_WIDTH = 144;
+    private static final int WORLD_HEIGHT = 256;
 
     //game objs
     private LinkedList<Explosion> explosionLinkedList;
@@ -52,7 +57,7 @@ public class GameScreen implements Screen {
     private LinkedList<Ship> ships;
     GameScreen(){
         initTextures();
-        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 60, 10, 10, 10, 1.5f, 10, 150, 0.15f, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 100);
+        playerShip = new PlayerShip(WORLD_WIDTH/2, WORLD_HEIGHT/4, 120, 10, 20, 20, 3f, 20, 300, 0.15f, playerTextureRegion, playerShieldTextureRegion, laserBlueRegion, 0, 100);
         ships = new LinkedList<>();
         ships.add(playerShip);
         lasersLinkedList = new LinkedList<>();
@@ -63,7 +68,7 @@ public class GameScreen implements Screen {
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
 
-
+        healthShieldBar = new HealthShieldBar(playerShip);
 
         backgroundMaxScrollSpeed = (float) WORLD_HEIGHT / 4;
         batch = new SpriteBatch();
@@ -75,8 +80,8 @@ public class GameScreen implements Screen {
     private void addEnemies(ListIterator<Ship> iter) {
         for (int i = 0; i < MAX_ENEMIES; i++) {
             iter.add(new EnemyShip(WORLD_WIDTH/(i+1), WORLD_HEIGHT + 10,
-                    20, 10, 10, 10,
-                    2f, 5, (float) (40 + Math.random()*45),
+                    40, 10, 15, 15,
+                    4f, 10, (float) (40 + Math.random()*45),
                     (float) (1 + Math.random()), enemyShipTextureRegion, enemyShieldTextureRegion,
                     laserRedRegion, 1, 5));
         }
@@ -109,20 +114,24 @@ public class GameScreen implements Screen {
         backgrounds[1] = textureAtlas.findRegion("background1");
         backgrounds[2] = textureAtlas.findRegion("background2");
         backgrounds[3] = textureAtlas.findRegion("background3");
+
+
+
     }
 
     @Override
     public void render(float delta) {
         batch.begin();
-        System.out.println(Gdx.graphics.getFramesPerSecond());
+
         renderBackground(delta);
         shipsIterating(delta);
         renderLasers(delta);
         detectCollisions();
         updateAndRenderExplosions();
+        healthShieldBar.update();
+        healthShieldBar.draw(batch);
         batch.end();
     }
-
 
     private void detectCollisions() {
         ListIterator<Laser> iter = lasersLinkedList.listIterator();
@@ -234,6 +243,5 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
-
     }
 }
